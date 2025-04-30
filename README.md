@@ -1,5 +1,145 @@
 # Assignment2
 
+## Task 1 – Differential GNSS Positioning
+
+### Evaluating Advanced GNSS Techniques for Smartphone Navigation
+
+The ubiquity of smartphones equipped with GNSS receivers has redefined location-based services and navigation. Yet, the standard GNSS positioning accuracy—typically ranging between 3 to 10 meters—is insufficient for high-precision applications such as lane-level vehicle guidance, augmented reality, and autonomous navigation. To meet growing demands for sub-meter accuracy on mobile platforms, several enhanced GNSS techniques have been developed, including Differential GNSS (DGNSS), Real-Time Kinematic (RTK), Precise Point Positioning (PPP), and the hybrid method known as PPP-RTK. These techniques vary in terms of their reliance on external infrastructure, convergence speed, achievable accuracy, and suitability for smartphone integration.
+
+**Differential GNSS (DGNSS)** improves positional accuracy by referencing known fixed ground stations. These stations compute corrections for atmospheric delays and satellite clock or orbital errors, which are then transmitted to nearby GNSS receivers. Widely available Satellite-Based Augmentation Systems (SBAS)—such as WAAS in North America or EGNOS in Europe—provide regional correction services that can enhance accuracy to 1–2 meters on compatible smartphones. DGNSS is particularly effective in open-sky environments and can be implemented with relatively low computational overhead. However, DGNSS performance degrades with increasing distance from the reference station and is limited by its susceptibility to urban multipath errors. Moreover, the lack of support for fine-grained carrier-phase correction means DGNSS cannot satisfy applications requiring sub-meter or centimeter-level positioning.
+
+**Real-Time Kinematic (RTK)** offers a compelling alternative for applications demanding centimeter-level precision. It works by resolving carrier-phase ambiguities from GNSS signals using continuous, low-latency corrections streamed from a nearby ground base station. Under optimal conditions, RTK can achieve horizontal accuracies as fine as 1–10 centimeters. However, this potential is hampered by several practical limitations. RTK requires a dual-frequency GNSS chipset and a reliable data connection to a base station typically within 10–20 kilometers. In smartphone use cases, such conditions are rarely guaranteed, especially in urban environments where buildings cause signal blockages and cycle slips. These disruptions necessitate costly re-initializations, undermining RTK’s robustness in dynamic or obstructed environments. Additionally, RTK imposes high computational and power demands, which challenge the energy and processing constraints of consumer-grade mobile devices.
+
+**Precise Point Positioning (PPP)** offers a more globally scalable approach by utilizing precise satellite orbit and clock corrections, usually delivered via global networks over the internet. Unlike RTK, PPP does not require proximity to ground reference stations and can achieve decimeter-level positioning accuracy across the globe. This makes it particularly useful in remote or infrastructure-poor regions. However, PPP’s primary limitation lies in its slow convergence time, which can range from 15 to over 45 minutes depending on satellite geometry and data continuity. For real-time navigation scenarios, this delay renders PPP largely impractical. Furthermore, like RTK, PPP depends on dual-frequency GNSS signals and raw measurement access, imposing substantial computational overhead and posing a barrier to seamless smartphone integration.
+
+To address the limitations of **both RTK and PPP**, PPP-RTK emerges as a hybrid solution that combines global correction capabilities with rapid convergence and centimeter-level precision. This method leverages a distributed network of reference stations, often delivering corrections in the State Space Representation (SSR) format. By modeling atmospheric delays and satellite errors spatially, PPP-RTK can reduce convergence times to between 30 seconds and 5 minutes—significantly faster than PPP—while maintaining similar levels of accuracy (2–20 cm). Unlike RTK, PPP-RTK is less reliant on line-of-sight to a local base station and is thus more robust in urban environments. Nevertheless, it still demands dual-frequency hardware, persistent internet connectivity, and often access to subscription-based services. These requirements, along with high power consumption and processing complexity, currently restrict PPP-RTK’s widespread adoption in mobile applications, though it remains the most promising candidate for future high-accuracy GNSS in smartphones.
+
+---
+
+## Quantitative Comparison
+
+The following table summarizes the key differences among the four techniques and baseline GNSS:
+
+
+| Feature                  | DGNSS (SBAS/Local) | RTK (Real-Time Kinematic) | PPP (Precise Point Positioning) | PPP-RTK (Network/SSR) | Standalone GNSS |
+|--------------------------|-------------------|----------------------------|----------------------------------|------------------------|------------------|
+| Accuracy (Horizontal)    | 0.5 – 2 m         | 0.01 – 0.1 m               | 0.05 – 0.3 m                     | 0.02 – 0.2 m           | 3 – 10+ m        |
+| Accuracy (Vertical)      | 1 – 5 m           | 0.02 – 0.2 m               | 0.1 – 0.6 m                      | 0.05 – 0.4 m           | 5 – 20+ m        |
+| Convergence Time         | < 10 sec          | 10s – 2 min                | 15 – 45+ min                     | 30s – 5 min            | < 30 sec         |
+| Urban Reliability        | Moderate          | Very Low                   | Low (pre), Moderate (post)       | Moderate to High       | Low–Moderate     |
+| Infrastructure Required  | SBAS/Base         | Local Base (<20 km)        | Global Correction Service        | Network + SSR Provider | None             |
+| Hardware Chipset         | Single Freq OK    | Dual Freq Essential        | Dual Freq Recommended            | Dual Freq Essential    | Single Freq OK   |
+| Processing Load          | Low               | Very High                  | High                             | High to Very High      | Low              |
+| Data Link Required       | SBAS: No / Local: Yes | Yes                     | Yes                              | Yes                    | No               |
+| Service Cost             | Free              | –                          | –                                | –                      | Free             |
+| Power Consumption        | Low               | High                       | High                             | High                   | Low              |
+
+---
+
+Key performance metrics clearly distinguish these techniques. RTK achieves the highest accuracy under ideal conditions, but suffers severely in urban environments due to signal obstructions. PPP-RTK and PPP both deliver wide-area support and high accuracy, but at the cost of convergence delays and processing demand. DGNSS offers a low-cost, near-instant improvement over standalone GNSS (with <10s convergence) but falls short in meeting precision-critical requirements. Importantly, all advanced techniques—except SBAS-based DGNSS—require dual-frequency chipsets and access to correction services, which are not yet standard in consumer-grade smartphones. Among them, PPP-RTK demonstrates the best compromise, offering fast convergence, high precision, and wide-area availability, though its computational and subscription requirements remain limiting factors.
+
+From a user experience standpoint, DGNSS provides the most seamless integration, especially via SBAS. In contrast, RTK, PPP, and PPP-RTK introduce varying degrees of complexity in setup, signal processing, and service access. Their reliance on continuous data connectivity and high-frequency measurement streams also leads to increased battery consumption—a critical factor for smartphone design. However, technological advances offer hope: the proliferation of multi-frequency GNSS chips, enhanced on-device computing, and wider availability of correction networks (e.g., Galileo HAS, BeiDou PPP-B2b) could reduce infrastructure dependence and lower the barrier for adoption. Additionally, improvements in sensor fusion—combining GNSS with IMUs, visual odometry, and other sensors—may help mitigate signal loss and improve accuracy and reliability in constrained environments.
+
+In conclusion, standard GNSS remains sufficient for casual navigation but fails to satisfy the precision and robustness demanded by emerging mobile applications. DGNSS represents a modest enhancement that is already widely deployed, while RTK, despite its theoretical accuracy, is hindered by high infrastructure and environment sensitivity. PPP offers global potential but is impractical for time-sensitive use. Among all, PPP-RTK stands out as the most viable solution for next-generation smartphones, balancing coverage, convergence, and precision. Its success, however, hinges on continued progress in chipset capabilities, cloud-based correction services, and energy-efficient computation.
+
+*Word count: ~1010*
+
+
+# Task 2 – GNSS in Urban Areas
+
+This task implements a GNSS positioning algorithm using a **Weighted Least Squares (WLS)** method. It incorporates a **SkyMask** to filter out obstructed satellites based on urban blockage and applies an **elevation-based weighting function** to reduce the impact of low-angle signals typically affected by multipath.
+
+---
+
+## Implementation Details
+
+### Data Loading
+
+- Satellite measurements including pseudorange, azimuth, elevation, and ECEF satellite positions are loaded from `navSolutions_urban.mat`.
+- SkyMask horizon data is read from `SkyMask_A1_urban.csv`, defining the blocking elevation angle for each azimuth (0–360°).
+
+### SkyMask Processing
+
+- The SkyMask data is interpolated into a 1-degree resolution vector to determine the **blocking elevation** for every azimuth direction.
+- An offset `delta = 25°` is subtracted from the SkyMask to form a **relative elevation mask** (`SkyMaskRel`), allowing only satellites above this threshold to be considered visible.
+- The original SkyMask horizon is plotted as follows:
+
+**Figure 1**: SkyMask Horizon  
+*Blocking elevation as a function of azimuth.*
+
+![SkyMask Horizon](fig1.png)
+
+---
+
+## Satellite Visibility and Weighting
+
+- For each epoch:
+  - A satellite is **considered visible** if its elevation exceeds the `SkyMaskRel` value for its corresponding azimuth.
+  - A **weight** is assigned to each visible satellite based on its elevation and its margin above the mask:
+  
+    ```matlab
+    w_i = sin(deg2rad(elevation_i - el_block)) * sin(deg2rad(elevation_i));
+    ```
+
+- If fewer than four satellites are visible in an epoch, the epoch is skipped.
+
+---
+
+## Weighted Least Squares (WLS) Positioning
+
+- When at least four satellites are visible, a **Gauss–Newton iteration** is used to estimate receiver state:
+
+### Iterative WLS Steps:
+
+1. **Initialize** the receiver state vector using ground truth position (converted to ECEF) and clock bias \( dt_0 = 0 \).
+2. For each iteration:
+   - Calculate predicted pseudoranges.
+   - Form residuals \( r_i = \rho_{\text{measured},i} - \rho_{\text{predicted},i} \).
+   - Construct the **design matrix** \( H \), containing partial derivatives w.r.t. position and clock bias.
+   - Apply the WLS update:
+
+     ```matlab
+     dx = (H' * W * H)^(-1) * H' * W * r
+     x_est = x_est + dx
+     ```
+
+   - Check convergence using \( \|dx\| < 10^{-4} \).
+
+- The solution is stored for each valid epoch. If no epochs have enough satellites, the mask is **relaxed by 2°** and re-evaluated.
+
+---
+
+## Results Analysis
+
+- Final estimated positions are plotted and compared with the **ground truth**.
+
+**Figure 2**: Estimated GNSS Positions  
+*Estimated positions (blue), ground truth (cross), and average estimated position (green).*
+
+![Position Estimates](fig2.png)
+
+### Observations:
+
+- **Position Scatter**: Estimates form a visible cluster with some spread, likely due to suboptimal satellite geometry and signal obstruction.
+- **Bias**: A consistent offset exists between the estimated cluster and ground truth, indicating a **systematic measurement bias**.
+- **Average Position**: The green 'X' shows the average of the first 9 valid estimates, giving a quantitative summary of the bias.
+- **Satellite Visibility**: Initial SkyMask (with `delta = 25`) resulted in <4 visible satellites in many epochs. Relaxation by 2° recovered visibility and allowed position computation.
+
+---
+
+## Conclusion
+
+This exercise demonstrates the challenges of urban GNSS and the benefit of SkyMask filtering and elevation-based weighting. Despite these measures, urban geometry and signal blockage still degrade accuracy and limit solution availability. Future improvements may include:
+
+- Multi-constellation GNSS (e.g., BeiDou, Galileo)
+- Sensor fusion (IMU, barometer, visual odometry)
+- Real-time SkyMask updating based on 3D maps or LiDAR
+
+These enhancements could help further mitigate urban positioning errors and enable robust performance in obstructed environments.
+
+
+
+
 
 ## AI Prompts used
 
