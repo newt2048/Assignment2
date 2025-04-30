@@ -1,6 +1,6 @@
 # Assignment2
 
-## Task 1 – Differential GNSS Positioning
+# Task 1 – Differential GNSS Positioning
 
 ### Evaluating Advanced GNSS Techniques for Smartphone Navigation
 
@@ -67,7 +67,7 @@ This task implements a GNSS positioning algorithm using a **Weighted Least Squar
 **Figure 1**: SkyMask Horizon  
 *Blocking elevation as a function of azimuth.*
 
-![SkyMask Horizon](fig1.png)
+![SkyMask Horizon](code/fig1.png)
 
 ---
 
@@ -116,7 +116,8 @@ This task implements a GNSS positioning algorithm using a **Weighted Least Squar
 **Figure 2**: Estimated GNSS Positions  
 *Estimated positions (blue), ground truth (cross), and average estimated position (green).*
 
-![Position Estimates](fig2.png)
+![Position Estimates](code/fig2.png)
+
 
 ### Observations:
 
@@ -136,6 +137,109 @@ This exercise demonstrates the challenges of urban GNSS and the benefit of SkyMa
 - Real-time SkyMask updating based on 3D maps or LiDAR
 
 These enhancements could help further mitigate urban positioning errors and enable robust performance in obstructed environments.
+
+
+
+# Task 3 – GPS RAIM (Receiver Autonomous Integrity Monitoring)
+
+This task investigates the challenges of GNSS positioning in urban environments. Urban areas introduce several difficulties, including:
+
+- **Signal Blockage**: Tall buildings and structures can obstruct the direct line-of-sight between GNSS satellites and the receiver.
+- **Multipath Effects**: Signals may reflect off surfaces such as walls and windows, leading to delayed and distorted signals that interfere with the direct signal, affecting measurement accuracy.
+- **Limited Satellite Visibility**: The restricted view of the sky reduces the number and spatial diversity of visible satellites, resulting in weak geometric conditions (high GDOP – Geometric Dilution of Precision).
+
+The goal is to enhance GNSS positioning performance using the provided *Urban* dataset (`navSolutions_opensky.mat`). This dataset includes a skymask that simulates urban canyon effects by defining satellite visibility constraints for different azimuth and elevation angles.
+
+The ground truth position is:
+
+- **Latitude**: 22.3198722°
+- **Longitude**: 114.2091017777778°
+- **Altitude**: 3.0 meters
+
+---
+
+## Methodology and Principles
+
+### Data Loading
+
+- Pseudorange and satellite position data are loaded from the file `navSolutions_opensky.mat`.
+
+### Weighted Least Squares (WLS) Estimation (Simplified)
+
+- GNSS positioning relies on solving an overdetermined system of equations derived from pseudorange measurements. For satellite *i*, the basic equation is:
+
+  ```
+  rho_i = sqrt((x_sat_i - x_user)^2 + (y_sat_i - y_user)^2 + (z_sat_i - z_user)^2) + c * dt_user + error_i
+  ```
+
+- This nonlinear equation is linearized around an approximate user position, resulting in the system:
+
+  ```
+  delta_rho = A * delta_x
+  ```
+
+- The simplified, non-iterative implementation computes matrix `A(i,:) = [u_x_i, u_y_i, u_z_i, -1]`, where `(u_x_i, u_y_i, u_z_i)` is the unit vector from the receiver (origin) to the satellite.
+
+- A weight matrix `W` is used. For unweighted least squares, `W = eye(n)` (identity matrix).
+
+- The position vector `position = [x, y, z, clock_offset_term]` is estimated using:
+
+  ```
+  position = (A' * W * A)^(-1) * (A' * W * current_pseudoranges)
+  ```
+
+### Fault Detection
+
+- RAIM techniques verify the internal consistency of the GNSS measurements.
+- Residuals are calculated as:
+
+  ```
+  residuals = current_pseudoranges - A * position
+  ```
+
+- The test statistic is calculated using:
+
+  ```
+  chi_square = (residuals' * W * residuals) / sigma_r2
+  sigma_r2 = (residuals' * residuals) / (n - 4)
+  ```
+
+  where `n` is the number of satellites, and `4` is the number of estimated parameters (x, y, z, clock).
+
+- This statistic is compared with a critical value from the chi-square distribution:
+
+  ```
+  chi2inv(0.99, n - 4)
+  ```
+
+- If `chi_square > critical_value`, it indicates a measurement inconsistency or potential fault due to multipath or other urban errors.
+
+### Protection Level (PL) Calculation (Simplified)
+
+- The Protection Level defines a bound on the positioning error that can be guaranteed with high confidence (low integrity risk).
+- The simplified formula used:
+
+  ```
+  PL = k * sigma
+  ```
+
+---
+
+## Results and Discussion
+
+![fig3](code/fig3.png)
+![fig4](code/fig4.png)
+
+### Satellite Geometry Visualization
+
+The following figures visualize the spatial distribution of the GNSS satellites over the entire observation period. This distribution is a key input for evaluating satellite geometry and positioning performance:
+
+- The 3D positions and epochs show how satellites move relative to the receiver.
+- The geometry and number of satellites available at each time step influence the potential positioning quality.
+- These plots provide a baseline reference for assessing positioning performance prior to applying urban-specific models like skymasks or fault detection.
+
+
+
 
 
 
